@@ -7,7 +7,7 @@ import sitemap from '@astrojs/sitemap';
 const site = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
 export default defineConfig({
-  site,
+  site: 'https://operacionesconsorcioexpress.github.io/Web_CEINF/',
   base: '/Web_CEINF/', // ✅ importante para GitHub Pages
   output: 'static',     // ✅ asegúrate de que sea 'static' para que Astro exporte HTML
   vite: {
