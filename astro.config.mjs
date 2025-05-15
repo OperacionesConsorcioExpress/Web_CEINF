@@ -8,6 +8,8 @@ const site = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 
 export default defineConfig({
   site,
+  base: '/Web_CEINF/', // ✅ importante para GitHub Pages
+  output: 'static',     // ✅ asegúrate de que sea 'static' para que Astro exporte HTML
   vite: {
     plugins: [tailwindcss()],
     css: {
