@@ -29,10 +29,10 @@ const activeCategories = categories.filter((category) =>
         data-aos-delay="100"
     >
         <div class="w-full">
-            <h2 class="text-lg font-semibold mb-4">Filter by Categories:</h2>
+            <h2 class="text-lg font-semibold mb-4">Filtros por Categorias:</h2>
             <div class="flex flex-wrap gap-2">
                 <a
-                    href="/blog"
+                    href="/Web_CEINF/blog"
                     class={`px-4 sm:px-6 py-2 sm:py-3 leading-none rounded-md text-small flex items-center justify-center transition-colors border border-primary duration-200 ${
                         !currentCategory
                             ? 'bg-primary text-body-dark shadow-md'
@@ -44,7 +44,7 @@ const activeCategories = categories.filter((category) =>
                 {
                     activeCategories.map((category) => (
                         <a
-                            href={`/category/${category.slug}`}
+                            href={`/Web_CEINF/category/${category.slug}`}
                             class={`px-4 sm:px-6 py-2 sm:py-3 leading-none rounded-md text-small flex items-center justify-center transition-colors border border-primary duration-200 ${
                                 currentCategory === category.name
                                     ? 'bg-primary text-body-dark shadow-md'

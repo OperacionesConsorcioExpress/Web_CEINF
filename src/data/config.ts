@@ -14,8 +14,8 @@ export const siteConfig = {
 
 export const SEO = {
   Separator: '|',
-  SiteName: 'Titan Core',
-  defaultDescription: 'A modern, high-performance Astro JS theme',
+  SiteName: 'CEXP',
+  defaultDescription: 'Un tema Astro JS moderno y de alto rendimiento',
 };
   
 export const blogSetting = {

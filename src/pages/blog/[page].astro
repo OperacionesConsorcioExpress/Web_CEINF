@@ -40,7 +40,7 @@ const { page, totalPages, posts } = Astro.props;
 
 // Redirect page 1 to the main blog page
 if (page === 1) {
-    return Astro.redirect('/blog');
+    return Astro.redirect('/Web_CEINF/blog');
 }
 ---
 
@@ -48,7 +48,7 @@ if (page === 1) {
     {posts}
     currentPage={page}
     {totalPages}
-    baseUrl="/blog"
+    baseUrl="/Web_CEINF/blog"
     title="Blog"
     subtitle="Latest articles and news from the team"
 />
