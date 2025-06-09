@@ -1,0 +1,171 @@
+:root {
+    --color-primary: #3557c1;
+    --color-primary-light: #4b6ed4;
+    --color-primary-dark: #1a3c8c;
+
+    --color-secondary: #cc9900;
+    --color-secondary-light: #e6b800;
+    --color-secondary-dark: #997300;
+
+    --color-accent: #1e3c8c;
+    --color-background: #f8f9ff;
+    --color-background-light: #eef1ff;
+    --color-background-dark: #1a1f3c;
+
+    --color-headline: #1a1f3c;
+    --color-headline-light: #1a1f3c;
+    --color-headline-dark: #ffffff;
+
+    --color-eyebrow: #1e3c8c;
+    --color-eyebrow-light: #1e3c8c;
+    --color-eyebrow-dark: #e6b800;
+
+    --color-body-base: #1a1f3c;
+    --color-body-light: #1a1f3c;
+    --color-body-dark: #ffffff;
+
+    --color-input: var(--color-background-light);
+    --color-input-light: var(--color-background-light);
+    --color-input-dark: var(--color-background-dark);
+    --color-input-text: var(--color-body-base);
+    --color-input-text-light: var(--color-headline-light);
+    --color-input-text-dark: var(--color-headline-dark);
+
+    --color-nav-text: var(--color-body-base);
+    --color-nav-text-hover: var(--color-primary);
+    --color-nav-text-active: var(--color-primary);
+    --color-nav-text-current: var(--color-primary);
+    --color-nav-submenu-bg: var(--color-background-light);
+    --color-nav-mobile-text: #ffffff;
+    --color-nav-mobile-text-hover: #e6b800;
+    --color-nav-mobile-text-active: #ffffff;
+    --color-nav-mobile-text-current: #ffffff;
+
+    --color-header-logo: var(--color-primary);
+    --color-footer-logo: var(--color-primary);
+
+    --text-base: 16px;
+
+    --font-base: 'Segoe UI', sans-serif;
+    --font-headline: 'Segoe UI', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-base);
+    background-color: var(--color-background);
+    color: var(--color-body-base);
+}
+
+header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+nav a {
+    color: var(--color-nav-mobile-text);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: var(--color-nav-mobile-text-hover);
+}
+
+main {
+    padding: 2rem;
+    max-width: 900px;
+    margin: auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+footer {
+    background-color: var(--color-primary-dark);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+h1, h2 {
+    color: var(--color-headline);
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: var(--color-secondary);
+}
+
+a.encuesta-link {
+    font-weight: 600;
+    display: inline-block;
+}
+
+.nav-menu {
+    position: relative;
+}
+
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: var(--color-nav-submenu-bg);
+    padding: 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    top: 100%;
+    left: 0;
+    min-width: 180px;
+}
+
+.submenu li {
+    margin: 5px 0;
+}
+
+.nav-menu:hover .submenu {
+    display: block;
+}
+
+.submenu a {
+    color: var(--color-nav-text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.submenu a:hover {
+    color: var(--color-nav-text-hover);
+}
+
