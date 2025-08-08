@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Encuesta Reporte BI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/css/estilos.css">
+  <style>
+    /* Estilos mínimos por si aún no están en estilos.css */
+    .container { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+    .card { background: #fff; border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .row { display: grid; gap: 1rem; }
+    label { font-weight: 600; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; padding: .6rem .8rem; border: 1px solid #ccc; border-radius: 8px;
+    }
+    .likert { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .likert label { font-weight: 400; }
+    .hint { font-size: .9rem; color: #555; }
+    button { padding: .7rem 1.2rem; border: 0; border-radius: 8px; background:#1f6feb; color:#fff; cursor:pointer; }
+    .readonly { background: #f5f7fb; }
+    .section { margin-top: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Encuesta de Satisfacción del Reporte BI</h2>
+      <p class="hint">Tu opinión ayuda a mejorar la calidad de nuestros informes.</p>
+
+      <!-- Importante: action="/encuesta" coincide con el POST de routers/encuesta.py -->
+      <form method="post" action="/encuesta" class="row">
+        <!-- 1) Informe a evaluar (autocompletado por la URL del QR) -->
+        <div class="section">
+          <label for="reporte">Informe a evaluar</label>
+          <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte or '' }}" class="readonly" readonly required>
+          <p class="hint">Este campo viene desde el código QR o el enlace del reporte.</p>
+        </div>
+
+        <!-- 2) Área de evaluación (texto) -->
+        <div class="section">
+          <label for="area_evaluacion">¿Desde qué área nos está evaluando?</label>
+          <input id="area_evaluacion" name="area_evaluacion" type="text" placeholder="Ej.: Gerencia, Operaciones, Finanzas" required>
+        </div>
+
+        <!-- 3) Cargo del evaluador (texto) -->
+        <div class="section">
+          <label for="cargo_evaluador">¿Cuál es su cargo dentro de esta área?</label>
+          <input id="cargo_evaluador" name="cargo_evaluador" type="text" placeholder="Ej.: Analista, Jefe, Coordinador" required>
+        </div>
+
+        <!-- 4) Claridad y precisión (Likert 1-5) -->
+        <div class="section">
+          <label>¿Cómo califica la claridad y precisión del reporte?</label>
+          <div class="likert">
+            {% for n in [1,2,3,4,5] %}
+              <label><input type="radio" name="claridad_precision" value="{{ n }}" required> {{ n }}</label>
+            {% endfor %}
+          </div>
+          <p class="hint">1 = Muy baja, 5 = Excelente</p>
+        </div>
+
+        <!-- 5) Utilidad general (Likert 1-5) -->
+        <div class="section">
+          <label>¿Qué tan útil encontró este informe?</label>
+          <div class="likert">
+            {% for n in [1,2,3,4,5] %}
+              <label><input type="radio" name="utilidad_general" value="{{ n }}" required> {{ n }}</label>
+            {% endfor %}
+          </div>
+          <p class="hint">1 = Nada útil, 5 = Muy útil</p>
+        </div>
+
+        <!-- 6) Utilidad para decisiones (Likert 1-5) -->
+        <div class="section">
+          <label>¿Qué tanto le ayudó este informe con la toma de decisiones?</label>
+          <div class="likert">
+            {% for n in [1,2,3,4,5] %}
+              <label><input type="radio" name="utilidad_decisiones" value="{{ n }}" required> {{ n }}</label>
+            {% endfor %}
+          </div>
+          <p class="hint">1 = Nada, 5 = Muchísimo</p>
+        </div>
+
+        <!-- 7) Frecuencia de uso (ordinal 4 opciones) -->
+        <div class="section">
+          <label for="frecuencia_uso">¿Con qué frecuencia consulta el informe?</label>
+          <select id="frecuencia_uso" name="frecuencia_uso" required>
+            <option value="">Selecciona una opción</option>
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+            <option value="eventual">Eventual</option>
+          </select>
+        </div>
+
+        <!-- 8) Sugerencias de mejora (texto abierto) -->
+        <div class="section">
+          <label for="sugerencias_mejora">¿Qué mejorarías de este informe?</label>
+          <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" placeholder="Escribe tus comentarios..."></textarea>
+        </div>
+
+        <div class="section">
+          <button type="submit">Enviar respuesta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

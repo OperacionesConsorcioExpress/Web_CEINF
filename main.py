@@ -4,23 +4,29 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
+
+# 1) Inicializamos la app
 app = FastAPI()
 
-# Base de directorios
+# 2) Directorios base
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
-# Montar recursos estáticos
+# 3) Montar archivos estáticos (/static/css/...)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Cargar plantillas HTML
+# 4) Cargar plantillas Jinja2 para páginas plantillas HTML
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Ruta raíz
+# 5) Rutas existentes (ejemplo de home) Ruta raíz
 @app.get("/")
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+# 6) router de encuesta
+from routers.encuesta import router as encuesta_router
+app.include_router(encuesta_router)
 
 # Rutas para otras páginas
 @app.get("/paginas/{nombre_pagina}")
@@ -29,3 +35,4 @@ def inicio(nombre_pagina: str, request: Request):
     if file_path.exists():
         return templates.TemplateResponse(f"pages/{nombre_pagina}.html", {"request": request})
     return RedirectResponse("/")
+
