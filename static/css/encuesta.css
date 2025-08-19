@@ -1,0 +1,295 @@
+/* =========================================================
+   TOKENS Y TEMAS
+   - Paleta corporativa de Consorcio (azules) y estados (verdes)
+   - Light por defecto; Dark cuando :root[data-theme="dark"]
+   - Todas las vistas consumen variables (var(--...))
+   ========================================================= */
+
+/* -------- Paleta base reutilizable (no cambia con el tema) -------- */
+:root{
+  --blue-900:#25397A; /* Azul corporativo profundo – títulos en claro */
+  --blue-800:#324A8E; /* Azul intermedio */
+  --blue-700:#3F5DB2; /* Azul acento 1 */
+  --blue-600:#5076E2; /* Azul acento 2 (primario por defecto) */
+  --blue-400:#83A4FF; /* Azul claro: focus/hover */
+  --blue-200:#BBCCF9; /* Azul muy claro: bordes suaves */
+
+  --green-700:#16A038; /* Verde éxito fuerte */
+  --green-600:#2BC14B; /* Verde éxito (primario en dark) */
+  --green-500:#3EE561; /* Verde acento */
+  --green-400:#5BF47B; /* Verde claro */
+  --green-300:#A2F9B5; /* Verde pálido */
+
+  --white:#FFFFFF;     /* Blanco */
+  --black:#000000;     /* Negro */
+
+  --radius:16px;       /* Radio estándar de tarjetas y botones */
+  --shadow:0 10px 30px rgba(0,0,0,.12); /* Sombra suave por defecto */
+}
+
+/* -------- Tema CLARO (por defecto y por data-theme="light") -------- */
+:root,
+:root[data-theme="light"]{
+  --bg:#FFFFFF;                           /* Fondo de página claro */
+  --card:#F3F6FF;                         /* Fondo de tarjetas claro */
+  --ink:#0E1A3A;                          /* Texto principal en claro */
+  --ink-muted:#4F5E87;                    /* Subtítulos/ayudas en claro */
+  --primary:var(--blue-600);              /* Botón/acentos en claro */
+  --primary-ink:var(--white);             /* Texto sobre primario */
+  --border:rgba(37,57,122,.18);           /* Bordes sutiles en claro */
+  --shadow:0 10px 30px rgba(248, 246, 246, 0.838); /* Sombra en claro  */
+  --title-color:var(--blue-900);          /* Color del <h1> en claro */
+}
+
+/* -------- Tema OSCURO (activado cuando data-theme="dark") -------- */
+:root[data-theme="dark"]{
+  --bg:linear-gradient(180deg, #34394898, #4c587d); /* Fondo degradado azul */
+  --card:#636771;                      /* Tarjetas azul oscuro */
+  --ink:#EAF0FF;                       /* Texto principal en oscuro */
+  --ink-muted:#BBCCF9;                 /* Subtítulos en oscuro */
+  --primary:var(--green-600);          /* Primario cambia a verde (contraste) */
+  --primary-ink:var(--white);          /* Texto sobre primario */
+  --border:rgba(187,204,249,.25);      /* Bordes en oscuro */
+  --shadow:0 10px 30px rgba(248, 246, 246, 0.377); /* Sombra en oscuro */
+  --title-color:var(--blue-200);       /* <h1> con buen contraste en oscuro */
+}
+
+/* =========================================================
+   BASE, TIPOGRAFÍA Y CONTENEDOR PRINCIPAL
+   ========================================================= */
+*{ box-sizing:border-box; } /* Incluye bordes/padding en los cálculos de ancho/alto */
+html,body{ height:100%; }   /* Asegura altura completa para 100vh y sticky footer */
+html{ font-size:12px; }     /* Base de 16px para rems */
+
+body.body{
+  margin:10; padding:10;                      /* Elimina márgenes/paddings por defecto */
+  background:var(--bg); color:var(--ink);   /* Aplica colores de tema */
+  font:12px/1.45 "Century Gothic", /*"AppleGothic","Gill Sans","Segoe UI",*/
+                 system-ui,-apple-system,Roboto,Ubuntu,"Helvetica Neue","Arial,sans-serif"; /* Tipografía */
+  overflow-x:hidden;                         /* Evita scroll horizontal accidental */
+}
+
+.survey-shell{
+  min-height:100vh;                          /* Ocupa alto total del viewport */
+  display:flex; flex-direction:column;      /* Estructura vertical */
+  padding:0px 26px;                        /* Separación respecto a los bordes */
+  width:100vw; max-width:100vw;             /* Full ancho */
+}
+
+/* =========================================================
+   HEADER (TÍTULO + LOGOS + TOGGLE TEMA)
+   ========================================================= */
+.survey-header{
+  display:inline-flex; align-items:flex-start; justify-content:space-between; /* Título a la izq., logos/toggle a la der. */
+  gap:16px; margin-bottom:12px;                                         /* Espaciado entre elementos y con el contenido */
+}
+.title{ margin:0; font-size:2rem; color:var(--title-color); }           /* H1; color depende del tema */
+.subtitle{ margin:0px 0 0; color:var(--ink-muted); }                    /* Subtítulo */
+.brand-right{ display:flex; align-items:center; gap:12px; }             /* Grupo (logos + botón) a la derecha */
+
+.brand-bar{
+  display:flex; align-items:center; gap:12px;                           /* Layout horizontal de logos */
+  padding:8px 10px; background:#FFFFFF;                                 /* Fondo claro por defecto */
+  border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); /* Borde/sombra */
+}
+:root[data-theme="dark"] .brand-bar{ background:#FFFFFF; }              /* Fondo de la barra en oscuro */
+.brand-logo{ height:36px; width:auto; display:block; }                  /* Tamaño base de logos */
+.brand-logo.ce{ height:34px; }                                          /* Ajuste fino logo Consorcio */
+.brand-logo.ci{ height:42px; }                                          /* Ajuste fino logo CI */
+.brand-logo.pbi{ height:38px; }                                         /* Ajuste fino logo Power BI */
+.divider{ width:1px; height:28px; background:var(--border); border-radius:2px; } /* Separador vertical */
+
+.btn-secondary{
+  background:transparent; color:var(--ink);                             /* Botón sin fondo, texto según tema */
+  border:1px solid var(--border); border-radius:12px;                   /* Borde y radio */
+  padding:.55rem .9rem; cursor:pointer;                                 /* Área clickeable */
+}
+.btn-secondary:hover{ box-shadow:0 0 0 3px rgba(80,118,226,.15); }      /* Halo soft al pasar el mouse */
+
+/* =========================================================
+   GRID DE CONTENIDO (2 columnas desktop / 1 columna móvil)
+   ========================================================= */
+/* Mapa de áreas en desktop:
+   IZQ  -> reporte, area, cargo, frecuencia
+   DER  -> calificaciones, comentarios
+*/
+.survey-grid{
+  display:grid; gap:10px;                                               /* Separación entre tarjetas */
+  grid-template-columns: 1fr 1.5fr;                                       /* Dos columnas iguales */
+  grid-template-areas:
+    "reporte        calificaciones"
+    "area           calificaciones"
+    "cargo          calificaciones"
+    "frecuencia     comentarios"
+    ".              comentarios";                                       /* La fila final deja hueco bajo la izq. */
+  grid-auto-rows:minmax(0,auto);                                        /* Altura automática por contenido */
+  position:relative;                                                    /* Contexto para sticky footer */
+  padding-bottom:76px;                                                  /* Espacio para el footer fijo */
+  width:100%;                                                           /* Ocupa todo el ancho disponible */
+}
+
+/* Asignación de cada tarjeta a su área del grid (nombres deben coincidir con HTML) */
+.reporte{       grid-area: reporte; }
+.area{          grid-area: area; }
+.cargo{         grid-area: cargo; }
+.calificaciones{grid-area: calificaciones; }
+.frecuencia{    grid-area: frecuencia; }
+.comentarios{   grid-area: comentarios; }
+
+/* Tarjetas (contenedores visuales de cada bloque) */
+.card{
+  background:var(--card);                                               /* Fondo según tema */
+  border:1px solid var(--border);                                       /* Borde suave */
+  border-radius:var(--radius);                                          /* Esquinas redondeadas */
+  padding:4px;                                                         /* Espaciado interno */
+  box-shadow:var(--shadow);                                             /* Sombra consistente */
+}
+
+/* Footer de envío ocupa el ancho de ambas columnas y permanece visible */
+.sticky{
+  grid-column: 1 / -2;                                                  /* Se extiende de la col 1 a la última */
+  position:sticky; bottom:0; left:0; right:0;                           /* Se pega al fondo del viewport */
+  display:flex; justify-content:flex-end; gap:10px;                     /* Botón alineado a la derecha */
+  padding:8px; backdrop-filter: blur(6px);                              /* Fondo translúcido con blur */
+  background:linear-gradient(0deg, rgba(255,255,255,.95), rgba(255,255,255,.6)); /* Fondo en claro */
+  border-radius:10px; border:1px solid var(--border); margin-top:6px;   /* Estética del contenedor */
+}
+:root[data-theme="dark"] .sticky{
+  background:linear-gradient(0deg, rgba(54, 60, 82, 0.95), rgba(58, 73, 133, 0.6)); /* Fondo en oscuro */
+}
+
+/* En móviles/tablets: apilar todo en una sola columna y definir el orden vertical */
+@media (max-width: 900px){
+  .survey-grid{
+    grid-template-columns: 1fr;                                         /* Una sola columna */
+    grid-template-areas:
+      "reporte"
+      "area"
+      "cargo"
+      "calificaciones"
+      "frecuencia"
+      "comentarios";                                                    /* Orden natural y claro */
+  }
+}
+
+/* =========================================================
+   CAMPOS (labels, inputs, hints)
+   ========================================================= */
+.label{ display:block; font-weight:700; margin-bottom:8px; color:var(--ink); } /* Etiquetas de campos */
+.hint{ font-size:.9rem; color:var(--ink-muted); margin-top:6px; }              /* Textos de ayuda */
+.hint.error{ color:#D95757; }                                                  /* Variación de error */
+
+.input, .select, .textarea{
+  width:100%; border-radius:12px; outline:none; font-family:inherit;    /* Campos ocupan ancho y heredan tipografía */
+  border:1px solid var(--border);                                       /* Borde consistente */
+  padding:.75rem .9rem;                                                 /* Espaciado interno */
+  background:#f7f9ff; color:var(--ink);                                 /* Apariencia en tema claro */
+}
+:root[data-theme="dark"] .input,
+:root[data-theme="dark"] .select,
+:root[data-theme="dark"] .textarea{
+  background:#373d53; color:#EAF0FF;                                    /* Apariencia en tema oscuro */
+}
+.input:focus, .select:focus, .textarea:focus{
+  border-color: var(--blue-400);                                        /* Borde azul al enfocar */
+  box-shadow:0 0 0 3px rgba(131,164,255,.15);                           /* Halo accesible de enfoque */
+}
+.readonly{ opacity:.9; }                                                /* Apariencia para solo lectura */
+
+/* =========================================================
+   MATRIZ 1–5 (Claridad y precisión / Utilidad / Decisiones)
+   ========================================================= */
+.block-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; } /* Encabezado compacto */
+.block-title{ margin:0; font-size:14px; color:var(--ink); }                       /* Título del bloque */
+
+.matrix{
+  margin-top:10px; border:1px solid var(--border);                      /* Borde exterior de la tabla */
+  border-radius:12px; overflow:hidden;                                  /* Esquinas redondeadas + ocultar overflow */
+}
+.matrix-head, .matrix-row{ display:grid; grid-template-columns:1.6fr repeat(5, 1fr); } /* 1 col de etiquetas + 5 de radios */
+.matrix-head{
+  background:#e9efff; color:#45527a; font-weight:700;                   /* Cabecera en claro */
+}
+:root[data-theme="dark"] .matrix-head{
+  background:#373d53; color:#cfe0ff;                                    /* Cabecera en oscuro (mejor contraste) */
+}
+.matrix-row:nth-child(even){ background:#f3f6ff; }                      /* Alternado de filas en claro */
+:root[data-theme="dark"] .matrix-row:nth-child(even){ background:#45527a; } /* Alternado en oscuro */
+
+.cell{ padding:10px 12px; border-bottom:1px solid var(--border); }      /* Celdas con división inferior */
+.center{ display:flex; align-items:center; justify-content:center; }     /* Centrado para los dots */
+.row-label{ font-weight:700; color:var(--ink); }                         /* Etiqueta de fila (pregunta) */
+
+.matrix input{ display:none; }                                          /* Radios reales ocultos (se controlan con .dot) */
+.dot{
+  width:18px; height:18px; border-radius:50%;                           /* Punto circular */
+  border:2px solid var(--blue-400); display:inline-flex; cursor:pointer;/* Borde azul y cursor mano */
+  transition: all .15s ease;                                            /* Suaviza hover/checked */
+}
+.matrix input:checked + .dot{
+  background:var(--green-600);                                           /* Punto lleno al seleccionar */
+  border-color:var(--blue-600);                                         /* Borde coincide con fill */
+  box-shadow:0 0 0 4px rgba(104, 226, 80, 0.18);                            /* Halo suave al seleccionar */
+}
+.dot:hover{ transform:scale(1.40); }                                   /* Crece un 8% al pasar el mouse */
+
+/* =========================================================
+   SEGMENTED CONTROL (Frecuencia)
+   ========================================================= */
+.segmented{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px;           /* Cuatro opciones en fila */
+  background:#eef2ff; padding:8px; border-radius:12px;                  /* Contenedor en claro */
+  border:1px solid var(--border);
+}
+:root[data-theme="dark"] .segmented{ background:#373d53; }              /* Contenedor en oscuro */
+.segmented input{ display:none; }                                       /* Radios internos ocultos */
+.segmented label{
+  display:block; text-align:center; padding:.6rem .4rem;                /* Píldoras clicables */
+  border-radius:10px; cursor:pointer; border:2px solid transparent;     /* Sin borde visible por defecto */
+  user-select:none; font-weight:600; color:var(--ink);                  /* Texto y peso */
+}
+.segmented input:checked + label{
+  background:linear-gradient(135deg, var(--blue-700), var(--primary));  /* Fondo degradado al seleccionar */
+  color:var(--primary-ink); border-color:transparent;                   /* Texto claro y sin borde */
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.08);                    /* Sutil borde interno */
+}
+.segmented label:hover{ border-color:#45527a; }                         /* Borde al pasar el mouse */
+
+/* =========================================================
+   BOTÓN PRINCIPAL
+   ========================================================= */
+.btn-primary{
+  background:linear-gradient(135deg, var(--blue-700), var(--primary));  /* Degradado azul->primario */
+  color:#fff; border:0; padding:.9rem 1.2rem; border-radius:12px;       /* Tamaño y forma */
+  font-weight:700; cursor:pointer; box-shadow:var(--shadow);             /* Sombra y cursor */
+  font-family: inherit;                                                  /* Hereda tipografía */
+}
+.btn-primary:hover{ filter:brightness(1.05); transform:translateY(-1px); } /* Efecto hover */
+
+/* =========================================================
+   PRESET "COMPACT"
+   - Automático: body.compact-auto (JS lo activa si altura <= 800px)
+   - Manual: añade class="compact" al body para forzarlo siempre
+   ========================================================= */
+
+
+/*body.compact-auto .survey-shell,
+body.compact .survey-shell{ padding:14px 16px; }                         /* Menos padding general */
+
+/*body.compact-auto .survey-grid,
+body.compact .survey-grid{ gap:10px; }                                   /* Menor separación entre tarjetas */
+
+/*body.compact-auto .card,
+body.compact .card{ padding:12px; border-radius:12px; }                  /* Tarjetas más compactas */
+
+/*body.compact-auto .title,
+body.compact .title{ font-size:1.6rem; }                                 /* Título un poco más pequeño */
+
+/*body.compact-auto .block-title,
+body.compact .block-title{ font-size:18px; }                             /* Título de bloque más pequeño */
+
+/*body.compact-auto .cell,
+body.compact .cell{ padding:8px 10px; }                                  /* Celdas de matriz más compactas */
+
+/*body.compact-auto .btn-primary,
+body.compact .btn-primary{ padding:.7rem 1rem; border-radius:10px; }     /* Botón más compacto */

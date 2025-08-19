@@ -2,6 +2,8 @@
 
 Sitio web estático para el Centro de Información CEINF, diseñado para alojarse en GitHub Pages.
 
+uvicorn main:app --reload
+
 ## ✅ Características
 
 - Página de inicio (`index.html`) con navegación.

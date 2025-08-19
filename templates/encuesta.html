@@ -1,110 +1,219 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Encuesta Reporte BI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/static/css/estilos.css">
-  <style>
-    /* Estilos mínimos por si aún no están en estilos.css */
-    .container { max-width: 900px; margin: 2rem auto; padding: 1rem; }
-    .card { background: #fff; border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-    .row { display: grid; gap: 1rem; }
-    label { font-weight: 600; }
-    input[type="text"], input[type="number"], select, textarea {
-      width: 100%; padding: .6rem .8rem; border: 1px solid #ccc; border-radius: 8px;
-    }
-    .likert { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
-    .likert label { font-weight: 400; }
-    .hint { font-size: .9rem; color: #555; }
-    button { padding: .7rem 1.2rem; border: 0; border-radius: 8px; background:#1f6feb; color:#fff; cursor:pointer; }
-    .readonly { background: #f5f7fb; }
-    .section { margin-top: .5rem; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <h2>Encuesta de Satisfacción del Reporte BI</h2>
-      <p class="hint">Tu opinión ayuda a mejorar la calidad de nuestros informes.</p>
+<!DOCTYPE html> <!-- Declaración del tipo de documento para HTML5 -->
+<!--
+  Encuesta BI – Versión comentada línea por línea
+  - Mantiene los mismos "name" de inputs para que el backend siga funcionando igual.
+  - Tema: Claro por defecto; si no hay preferencia guardada, sigue el tema del SO (prefers-color-scheme).
+  - Toggle de tema con persistencia en localStorage y escucha de cambios del SO.
+  - Distribución en desktop: 2 columnas con Grid Areas.
+      Columna izquierda -> Reporte, Área, Cargo, Frecuencia
+      Columna derecha   -> Calificaciones, Comentarios
+    En móvil/tablet (<=900px): 1 columna (apilado).
+  - Modo “compact” automático si el viewport es bajo (<= 800px) y manual con class="compact" en <body>.
+-->
+<html lang="es"> <!-- Idioma del documento -->
+<head> <!-- Cabecera del documento -->
+  <meta charset="UTF-8" /> <!-- Codificación de caracteres -->
+  <title>Encuesta Reporte BI</title> <!-- Título de la pestaña del navegador -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- Escala para dispositivos móviles -->
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/encuesta.css') }}?v={{ static_version }}">  <!-- href="/static/css/encuesta.css"> -- Enlace a la hoja de estilos de la encuesta -->
+</head> <!-- Fin de la cabecera -->
 
-      <!-- Importante: action="/encuesta" coincide con el POST de routers/encuesta.py -->
-      <form method="post" action="/encuesta" class="row">
-        <!-- 1) Informe a evaluar (autocompletado por la URL del QR) -->
-        <div class="section">
-          <label for="reporte">Informe a evaluar</label>
-          <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte or '' }}" class="readonly" readonly required>
-          <p class="hint">Este campo viene desde el código QR o el enlace del reporte.</p>
+<!--
+  SUGERENCIA: si quieres forzar el modo compacto siempre, agrega "compact" a la clase del body:
+  <body class="body compact">
+-->
+<body class="body"> <!-- Cuerpo del documento; clase "body" aplica tipografía/tema global -->
+  <main class="survey-shell"> <!-- Contenedor principal que ocupa todo el viewport y define padding lateral -->
+    <header class="survey-header"> <!-- Encabezado: título + barra de logos + botón de tema -->
+      <div class="title-wrap"> <!-- Grupo de título y subtítulo -->
+        <h1 class="title">Encuesta de Satisfacción</h1> <!-- Título visible (color cambia por tema) -->
+        <p class="subtitle">Tu feedback mejora nuestros informes BI.</p> <!-- Subtítulo descriptivo -->
+      </div>
+
+      <div class="brand-right"> <!-- Lado derecho del header: logos + botón de tema -->
+        <div class="brand-bar" aria-label="Logos corporativos"> <!-- Barra de logos con borde/sombra -->
+          <img src="/static/img/ce_logo.png" class="brand-logo ce" alt="Consorcio Express" title="Consorcio Express"> <!-- Logo CE -->
+          <span class="divider" aria-hidden="true"></span> <!-- Separador visual -->
+          <img src="/static/img/power_bi.png" class="brand-logo pbi" alt="Power BI" title="Power BI"> <!-- Logo Power BI -->          
+          <span class="divider" aria-hidden="true"></span> <!-- Separador visual -->
+          <img src="/static/img/centro_info_logo.png" class="brand-logo ci" alt="Centro de Información" title="Centro de Información"> <!-- Logo CI -->
         </div>
 
-        <!-- 2) Área de evaluación (texto) -->
-        <div class="section">
-          <label for="area_evaluacion">¿Desde qué área nos está evaluando?</label>
-          <input id="area_evaluacion" name="area_evaluacion" type="text" placeholder="Ej.: Gerencia, Operaciones, Finanzas" required>
+        <button type="button" class="btn-secondary theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+          🌚 Oscuro
+        </button> <!-- Botón para alternar entre tema claro/oscuro; texto se actualiza vía JS -->
+      </div>
+    </header> <!-- Fin del header -->
+
+    <form method="post" action="/encuesta" class="survey-grid"> <!-- Form principal; grid de 2 columnas (desktop) -->
+      <!-- BLOQUES COLUMNA IZQUIERDA -->
+      <section class="card reporte"> <!-- Tarjeta: reporte a evaluar; área de grid "reporte" -->
+        <label class="label">Informe a evaluar</label> <!-- Etiqueta del campo -->
+
+        {% if nombre_reporte %} <!-- Si llega desde QR con ?reporte=... -->
+          <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte }}" class="input readonly" readonly required> <!-- Campo solo lectura con el valor -->
+          <p class="hint">Valor recibido desde el enlace/código QR.</p> <!-- Pista al usuario -->
+        {% else %} <!-- Si NO viene desde QR -->
+          {% if lista_reportes is not none %} <!-- Si hubo conexión a BD (lista existe; puede estar vacía) -->
+            <select id="reporte" name="reporte" class="select" required> <!-- Selector con opciones traídas de la BD -->
+              {% if lista_reportes|length > 0 %} <!-- Si hay elementos para listar -->
+                <option value="">Seleccione un reporte</option> <!-- Placeholder de selección -->
+                {% for r in lista_reportes %} <!-- Itera cada nombre -->
+                  <option value="{{ r }}">{{ r }}</option> <!-- Opción con el nombre del reporte -->
+                {% endfor %}
+              {% else %} <!-- Si la lista está vacía -->
+                <option value="" disabled selected>No hay reportes disponibles</option> <!-- Informa que no hay datos -->
+              {% endif %}
+            </select>
+            <p class="hint">Selecciona el informe que deseas evaluar.</p> <!-- Ayuda adicional -->
+          {% else %} <!-- Si falló la BD (lista_reportes es None) -->
+            <input id="reporte" name="reporte" type="text" class="input" placeholder="Escriba el nombre del reporte" required> <!-- Fallback manual -->
+            <p class="hint error">No se pudo cargar la lista desde la base de datos.</p> <!-- Mensaje de error -->
+          {% endif %}
+        {% endif %}
+      </section>
+
+      <section class="card area"> <!-- Tarjeta: área del evaluador; área de grid "area" -->
+        <label for="area_evaluacion" class="label">¿Desde qué área nos está evaluando?</label> <!-- Etiqueta -->
+        <input id="area_evaluacion" name="area_evaluacion" type="text" class="input" placeholder="Ej.: Gerencia, Operaciones, Finanzas" required> <!-- Input de texto -->
+      </section>
+
+      <section class="card cargo"> <!-- Tarjeta: cargo del evaluador; área de grid "cargo" -->
+        <label for="cargo_evaluador" class="label">¿Cuál es su cargo dentro de esta área?</label> <!-- Etiqueta -->
+        <input id="cargo_evaluador" name="cargo_evaluador" type="text" class="input" placeholder="Ej.: Analista, Jefe, Coordinador" required> <!-- Input de texto -->
+      </section>
+
+      <!-- BLOQUES COLUMNA DERECHA -->
+      <section class="card calificaciones"> <!-- Tarjeta: calificaciones (matriz 1–5); área de grid "calificaciones" -->
+        <div class="block-head"> <!-- Encabezado del bloque (título + hint) -->
+          <h2 class="block-title">Calificaciones</h2> <!-- Título del bloque -->
+          <p class="hint">1 = Muy baja / Nada — 5 = Excelente / Muchísimo</p> <!-- Hint de escala -->
         </div>
 
-        <!-- 3) Cargo del evaluador (texto) -->
-        <div class="section">
-          <label for="cargo_evaluador">¿Cuál es su cargo dentro de esta área?</label>
-          <input id="cargo_evaluador" name="cargo_evaluador" type="text" placeholder="Ej.: Analista, Jefe, Coordinador" required>
-        </div>
-
-        <!-- 4) Claridad y precisión (Likert 1-5) -->
-        <div class="section">
-          <label>¿Cómo califica la claridad y precisión del reporte?</label>
-          <div class="likert">
-            {% for n in [1,2,3,4,5] %}
-              <label><input type="radio" name="claridad_precision" value="{{ n }}" required> {{ n }}</label>
+        <div class="matrix"> <!-- Contenedor de la matriz 1–5 -->
+          <div class="matrix-head"> <!-- Cabecera con números 1–5 -->
+            <div class="cell"></div> <!-- Celda vacía (esquina superior izquierda) -->
+            {% for n in [1,2,3,4,5] %} <!-- Loop de columnas 1..5 -->
+              <div class="cell center">{{n}}</div> <!-- Número centrado -->
             {% endfor %}
           </div>
-          <p class="hint">1 = Muy baja, 5 = Excelente</p>
-        </div>
 
-        <!-- 5) Utilidad general (Likert 1-5) -->
-        <div class="section">
-          <label>¿Qué tan útil encontró este informe?</label>
-          <div class="likert">
-            {% for n in [1,2,3,4,5] %}
-              <label><input type="radio" name="utilidad_general" value="{{ n }}" required> {{ n }}</label>
+          <div class="matrix-row"> <!-- Fila: Claridad y precisión -->
+            <div class="cell row-label">Claridad y precisión</div> <!-- Etiqueta fila -->
+            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
+              <div class="cell center"> <!-- Celda centrada -->
+                <input type="radio" id="cp_{{n}}" name="claridad_precision" value="{{n}}" required> <!-- Radio oculto visualmente (se estiliza con .dot) -->
+                <label for="cp_{{n}}" class="dot"></label> <!-- Punto clicable que marca el radio -->
+              </div>
             {% endfor %}
           </div>
-          <p class="hint">1 = Nada útil, 5 = Muy útil</p>
-        </div>
 
-        <!-- 6) Utilidad para decisiones (Likert 1-5) -->
-        <div class="section">
-          <label>¿Qué tanto le ayudó este informe con la toma de decisiones?</label>
-          <div class="likert">
-            {% for n in [1,2,3,4,5] %}
-              <label><input type="radio" name="utilidad_decisiones" value="{{ n }}" required> {{ n }}</label>
+          <div class="matrix-row"> <!-- Fila: Utilidad general -->
+            <div class="cell row-label">Utilidad general</div> <!-- Etiqueta fila -->
+            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
+              <div class="cell center">
+                <input type="radio" id="ug_{{n}}" name="utilidad_general" value="{{n}}" required> <!-- Radio -->
+                <label for="ug_{{n}}" class="dot"></label> <!-- Punto visual -->
+              </div>
             {% endfor %}
           </div>
-          <p class="hint">1 = Nada, 5 = Muchísimo</p>
-        </div>
 
-        <!-- 7) Frecuencia de uso (ordinal 4 opciones) -->
-        <div class="section">
-          <label for="frecuencia_uso">¿Con qué frecuencia consulta el informe?</label>
-          <select id="frecuencia_uso" name="frecuencia_uso" required>
-            <option value="">Selecciona una opción</option>
-            <option value="diario">Diario</option>
-            <option value="semanal">Semanal</option>
-            <option value="mensual">Mensual</option>
-            <option value="eventual">Eventual</option>
-          </select>
-        </div>
+          <div class="matrix-row"> <!-- Fila: Apoyo a decisiones -->
+            <div class="cell row-label">Apoyo a decisiones</div> <!-- Etiqueta fila -->
+            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
+              <div class="cell center">
+                <input type="radio" id="ud_{{n}}" name="utilidad_decisiones" value="{{n}}" required> <!-- Radio -->
+                <label for="ud_{{n}}" class="dot"></label> <!-- Punto visual -->
+              </div>
+            {% endfor %}
+          </div>
+        </div> <!-- Fin de la matriz -->
+      </section>
 
-        <!-- 8) Sugerencias de mejora (texto abierto) -->
-        <div class="section">
-          <label for="sugerencias_mejora">¿Qué mejorarías de este informe?</label>
-          <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" placeholder="Escribe tus comentarios..."></textarea>
-        </div>
+      <section class="card frecuencia"> <!-- Tarjeta: frecuencia de uso; área de grid "frecuencia" -->
+        <label class="label">¿Con qué frecuencia consulta el informe?</label> <!-- Etiqueta -->
+        <div class="segmented"> <!-- Control segmentado tipo "píldoras" -->
+          <input type="radio" id="fq_diario"   name="frecuencia_uso" value="diario"  required> <!-- Radio oculto -->
+          <label for="fq_diario">Diario</label> <!-- Píldora visible -->
 
-        <div class="section">
-          <button type="submit">Enviar respuesta</button>
+          <input type="radio" id="fq_semanal"  name="frecuencia_uso" value="semanal"> <!-- Radio oculto -->
+          <label for="fq_semanal">Semanal</label> <!-- Píldora visible -->
+
+          <input type="radio" id="fq_mensual"  name="frecuencia_uso" value="mensual"> <!-- Radio oculto -->
+          <label for="fq_mensual">Mensual</label> <!-- Píldora visible -->
+
+          <input type="radio" id="fq_eventual" name="frecuencia_uso" value="eventual"> <!-- Radio oculto -->
+          <label for="fq_eventual">Eventual</label> <!-- Píldora visible -->
         </div>
-      </form>
-    </div>
-  </div>
-</body>
-</html>
+      </section>
+
+      <section class="card comentarios"> <!-- Tarjeta: comentarios; área de grid "comentarios" -->
+        <label for="sugerencias_mejora" class="label">¿Qué mejorarías de este informe?</label> <!-- Etiqueta -->
+        <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" class="textarea" placeholder="Escribe tus comentarios..."></textarea> <!-- Área de texto -->
+      </section>
+
+      <footer class="sticky"> <!-- Barra pegada al fondo del viewport con el botón de envío -->
+        <button type="submit" class="btn-primary">Enviar respuesta</button> <!-- Botón de envío del formulario -->
+      </footer>
+    </form> <!-- Fin del formulario -->
+  </main> <!-- Fin del contenedor principal -->
+
+  <script>
+    // =======================
+    // THEME: inicialización, toggle, seguimiento del SO
+    // =======================
+    (function initTheme() { // IIFE para no contaminar el scope global
+      const root  = document.documentElement; // <html>, donde pondremos data-theme
+      const btn   = document.getElementById('themeToggle'); // botón de alternancia
+      const media = window.matchMedia('(prefers-color-scheme: dark)'); // consulta de tema del SO
+      const saved = localStorage.getItem('theme'); // preferencia guardada: 'light' | 'dark' | null
+      let followOS = false; // bandera para saber si seguimos los cambios del SO
+
+      function setTheme(mode) { // Cambia el atributo y el texto del botón
+        root.setAttribute('data-theme', mode); // aplica tokens CSS del tema
+        btn.textContent = (mode === 'dark') ? '🌞 Claro...' : '🌚 Oscuro'; // actualiza label del botón
+      }
+
+      // 1) Si hay preferencia del usuario, úsala; si no, sigue el SO
+      if (saved === 'light' || saved === 'dark') {
+        setTheme(saved); // aplica preferencia persistida
+      } else {
+        setTheme(media.matches ? 'dark' : 'light'); // usa tema del SO al cargar
+        followOS = true; // mientras no haya preferencia guardada, seguimos al SO
+      }
+
+      // 2) Reacciona a cambios del SO (solo si estamos siguiendo al SO)
+      media.addEventListener('change', (e) => {
+        if (followOS) setTheme(e.matches ? 'dark' : 'light'); // alterna según el SO
+      });
+
+      // 3) Toggle manual: fija preferencia y deja de seguir al SO
+      btn.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; // invierte el modo
+        followOS = false; // ya no seguimos al SO porque el usuario decidió
+        localStorage.setItem('theme', next); // persistimos la preferencia
+        setTheme(next); // aplicamos el nuevo tema
+      });
+    })();
+
+    // =======================
+    // COMPACT MODE: automático para pantallas bajitas (<= 800 px)
+    // =======================
+    (function initCompact() { // IIFE para modo compacto
+      const apply = () => { // función que aplica o quita la clase
+        const isSmall = window.innerHeight <= 800; // umbral de altura (ajustable)
+        if (!document.body.classList.contains('compact')) { // si NO se forzó manual
+          document.body.classList.toggle('compact-auto', isSmall); // alterna clase auto
+        }
+      };
+      apply(); // evalúa al cargar
+      window.addEventListener('resize', apply); // re-evalúa al cambiar tamaño
+    })();
+  </script> <!-- Fin del script de comportamiento -->
+</body> <!-- Fin del body -->
+</html> <!-- Fin del documento -->
+<!--
+  Fin del documento HTML de la encuesta.
+  - Incluye comentarios para entender cada sección y funcionalidad.
+  - El código JavaScript maneja el tema y el modo compacto de forma eficiente.
+  - La estructura es semántica y accesible, con etiquetas ARIA donde corresponde.
