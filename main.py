@@ -4,13 +4,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from dotenv import load_dotenv
 # Importa el router de otros lubros
 from routers.encuesta import router as encuesta_router
 
 
 # 1) Inicializamos la app
 app = FastAPI()
-load_dotenv = ()
+load_dotenv()
 
 # 2) Directorios base
 BASE_DIR = Path(__file__).resolve().parent
