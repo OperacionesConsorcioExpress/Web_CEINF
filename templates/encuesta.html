@@ -37,7 +37,7 @@
     <form method="post" action="/encuesta" class="survey-grid" id="formEncuesta">
       <!-- Reporte -->
       <section class="card reporte">
-        <label class="label">Informe a evaluar</label>
+        <label class="label required">Informe a evaluar</label>
         {% if nombre_reporte %}
           <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte }}" class="input readonly" readonly required>
           <p class="hint">Valor recibido desde el enlace/código QR.</p>
@@ -63,7 +63,7 @@
 
       <!-- Proceso -->
       <section class="card proceso">
-        <label for="proceso" class="label">¿Desde qué área (proceso) nos está evaluando?</label>
+        <label for="proceso" class="label required">¿Desde qué área (proceso) nos está evaluando?</label>
         {% if lista_procesos is not none and lista_procesos|length > 0 %}
           <select id="proceso" name="proceso" class="select" required>
             <option value="">Seleccione un proceso</option>
@@ -80,7 +80,7 @@
 
       <!-- Subproceso (dependiente) -->
       <section class="card subproceso">
-        <label for="subproceso_evaluacion" class="label">¿Desde qué subproceso nos está evaluando?</label>
+        <label for="subproceso_evaluacion" class="label required">¿Desde qué subproceso nos está evaluando?</label>
         <select id="subproceso_evaluacion" name="subproceso_evaluacion" class="select" required disabled>
           <option value="">Seleccione un subproceso</option>
         </select>
@@ -89,14 +89,14 @@
 
       <!-- Cargo -->
       <section class="card cargo">
-        <label for="cargo_evaluador" class="label">¿Cuál es su cargo dentro de esta área?</label>
+        <label for="cargo_evaluador" class="label required">¿Cuál es su cargo dentro de esta área?</label>
         <input id="cargo_evaluador" name="cargo_evaluador" type="text" class="input" placeholder="Ej.: Analista, Jefe, Coordinador" required>
       </section>
 
       <!-- Calificaciones -->
       <section class="card calificaciones">
         <div class="block-head">
-          <h2 class="block-title">Calificaciones</h2>
+          <h2 class="block-title required">Calificaciones</h2>
           <p class="hint">1 = Muy baja / Nada — 5 = Excelente / Muchísimo</p>
         </div>
 
@@ -142,7 +142,7 @@
 
       <!-- Frecuencia -->
       <section class="card frecuencia">
-        <label class="label">¿Con qué frecuencia consulta el informe?</label>
+        <label class="label required">¿Con qué frecuencia consulta el informe?</label>
         <div class="segmented">
           <input type="radio" id="fq_diario"   name="frecuencia_uso" value="diario"  required>
           <label for="fq_diario">Diario</label>
@@ -158,10 +158,26 @@
         </div>
       </section>
 
-      <!-- Comentarios -->
+      <!-- Comentarios (AJUSTADO: añade contador de palabras) -->
       <section class="card comentarios">
-        <label for="sugerencias_mejora" class="label">¿Qué mejorarías de este informe?</label>
-        <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" class="textarea" placeholder="Escribe tus comentarios..." required></textarea>
+        <!-- Etiqueta con asterisco rojo (clase .required ya lo dibuja vía CSS) -->
+        <label for="sugerencias_mejora" class="label required">¿Qué mejorarías de este informe?</label>
+
+        <!-- Textarea tal cual; el conteo será por palabras, no por caracteres -->
+        <textarea id="sugerencias_mejora"
+                  name="sugerencias_mejora"
+                  rows="4"
+                  class="textarea"
+                  placeholder="Escribe tus comentarios..."
+                  required></textarea>
+
+        <!-- Línea de ayuda + contador en vivo (accesible con aria-live) -->
+        <p id="wordCounter"
+           class="hint"
+           aria-live="polite"
+           style="margin-top:6px">
+          Máximo 500 palabras. Te quedan <b id="wordsLeft">500</b>.
+        </p>
       </section>
 
       <!-- Footer -->
@@ -393,5 +409,55 @@
       });
     })();
   </script>
+
+  <!-- ============ Contador de palabras (500 máx) ============ -->
+  <script>
+    (function wordCountLimit(){
+      const textarea   = document.getElementById('sugerencias_mejora');   // textarea a vigilar
+      const counter    = document.getElementById('wordCounter');          // contenedor del mensaje
+      const leftSpan   = document.getElementById('wordsLeft');            // número dinámico
+      const form       = document.getElementById('formEncuesta');         // el formulario
+      const submitBtn  = form?.querySelector('.btn-primary');             // botón enviar
+      const MAX_WORDS  = 500;                                             // tope de palabras
+
+      if (!textarea || !counter || !leftSpan || !form || !submitBtn) return;
+
+      // Cuenta palabras separadas por cualquier espacio en blanco
+      function countWords(v){
+        if (!v) return 0;
+        const m = v.trim().match(/\S+/g);
+        return m ? m.length : 0;
+      }
+
+      // Actualiza contador y bloquea el submit si excede
+      function update(){
+        const used  = countWords(textarea.value);
+        const left  = Math.max(0, MAX_WORDS - used);
+        leftSpan.textContent = left.toString();
+
+        const over = used > MAX_WORDS;
+        counter.classList.toggle('over', over);  // si quieres, puedes estilizar .over en CSS
+        submitBtn.disabled = over;               // evita enviar sobrepasado
+        counter.title = over
+          ? `Te pasaste por ${used - MAX_WORDS} palabra(s).`
+          : `Has usado ${used} de ${MAX_WORDS} palabras.`;
+      }
+
+      // Inicial y en cada cambio del textarea
+      update();
+      textarea.addEventListener('input', update);
+
+      // Capa de seguridad extra en el envío
+      form.addEventListener('submit', (ev)=>{
+        const used = countWords(textarea.value);
+        if (used > MAX_WORDS){
+          ev.preventDefault();
+          alert(`El comentario supera el máximo de ${MAX_WORDS} palabras (tiene ${used}).`);
+          textarea.focus();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
+
