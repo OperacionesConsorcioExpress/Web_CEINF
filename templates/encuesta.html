@@ -1,219 +1,397 @@
-<!DOCTYPE html> <!-- Declaración del tipo de documento para HTML5 -->
-<!--
-  Encuesta BI – Versión comentada línea por línea
-  - Mantiene los mismos "name" de inputs para que el backend siga funcionando igual.
-  - Tema: Claro por defecto; si no hay preferencia guardada, sigue el tema del SO (prefers-color-scheme).
-  - Toggle de tema con persistencia en localStorage y escucha de cambios del SO.
-  - Distribución en desktop: 2 columnas con Grid Areas.
-      Columna izquierda -> Reporte, Área, Cargo, Frecuencia
-      Columna derecha   -> Calificaciones, Comentarios
-    En móvil/tablet (<=900px): 1 columna (apilado).
-  - Modo “compact” automático si el viewport es bajo (<= 800px) y manual con class="compact" en <body>.
--->
-<html lang="es"> <!-- Idioma del documento -->
-<head> <!-- Cabecera del documento -->
-  <meta charset="UTF-8" /> <!-- Codificación de caracteres -->
-  <title>Encuesta Reporte BI</title> <!-- Título de la pestaña del navegador -->
-  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- Escala para dispositivos móviles -->
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/encuesta.css') }}?v={{ static_version }}">  <!-- href="/static/css/encuesta.css"> -- Enlace a la hoja de estilos de la encuesta -->
-</head> <!-- Fin de la cabecera -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Encuesta Reporte BI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tu CSS (no lo cambiamos aquí) -->
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/encuesta.css') }}?v={{ static_version }}">
+</head>
 
-<!--
-  SUGERENCIA: si quieres forzar el modo compacto siempre, agrega "compact" a la clase del body:
-  <body class="body compact">
--->
-<body class="body"> <!-- Cuerpo del documento; clase "body" aplica tipografía/tema global -->
-  <main class="survey-shell"> <!-- Contenedor principal que ocupa todo el viewport y define padding lateral -->
-    <header class="survey-header"> <!-- Encabezado: título + barra de logos + botón de tema -->
-      <div class="title-wrap"> <!-- Grupo de título y subtítulo -->
-        <h1 class="title">Encuesta de Satisfacción</h1> <!-- Título visible (color cambia por tema) -->
-        <p class="subtitle">Tu feedback mejora nuestros informes BI.</p> <!-- Subtítulo descriptivo -->
+<body class="body">
+  <main class="survey-shell">
+    <!-- ================== HEADER ================== -->
+    <header class="survey-header">
+      <div class="title-wrap">
+        <h1 class="title">Encuesta de Satisfacción</h1>
+        <p class="subtitle">Tu feedback mejora nuestros informes BI.</p>
       </div>
 
-      <div class="brand-right"> <!-- Lado derecho del header: logos + botón de tema -->
-        <div class="brand-bar" aria-label="Logos corporativos"> <!-- Barra de logos con borde/sombra -->
-          <img src="/static/img/ce_logo.png" class="brand-logo ce" alt="Consorcio Express" title="Consorcio Express"> <!-- Logo CE -->
-          <span class="divider" aria-hidden="true"></span> <!-- Separador visual -->
-          <img src="/static/img/power_bi.png" class="brand-logo pbi" alt="Power BI" title="Power BI"> <!-- Logo Power BI -->          
-          <span class="divider" aria-hidden="true"></span> <!-- Separador visual -->
-          <img src="/static/img/centro_info_logo.png" class="brand-logo ci" alt="Centro de Información" title="Centro de Información"> <!-- Logo CI -->
+      <div class="brand-right">
+        <div class="brand-bar" aria-label="Logos corporativos">
+          <img src="/static/img/ce_logo.png" class="brand-logo ce" alt="Consorcio Express" title="Consorcio Express">
+          <span class="divider" aria-hidden="true"></span>
+          <img src="/static/img/power_bi.png" class="brand-logo pbi" alt="Power BI" title="Power BI">
+          <span class="divider" aria-hidden="true"></span>
+          <img src="/static/img/centro_info_logo.png" class="brand-logo ci" alt="Centro de Información" title="Centro de Información">
         </div>
 
+        <!-- Toggle de tema -->
         <button type="button" class="btn-secondary theme-toggle" id="themeToggle" aria-label="Cambiar tema">
           🌚 Oscuro
-        </button> <!-- Botón para alternar entre tema claro/oscuro; texto se actualiza vía JS -->
+        </button>
       </div>
-    </header> <!-- Fin del header -->
+    </header>
 
-    <form method="post" action="/encuesta" class="survey-grid"> <!-- Form principal; grid de 2 columnas (desktop) -->
-      <!-- BLOQUES COLUMNA IZQUIERDA -->
-      <section class="card reporte"> <!-- Tarjeta: reporte a evaluar; área de grid "reporte" -->
-        <label class="label">Informe a evaluar</label> <!-- Etiqueta del campo -->
-
-        {% if nombre_reporte %} <!-- Si llega desde QR con ?reporte=... -->
-          <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte }}" class="input readonly" readonly required> <!-- Campo solo lectura con el valor -->
-          <p class="hint">Valor recibido desde el enlace/código QR.</p> <!-- Pista al usuario -->
-        {% else %} <!-- Si NO viene desde QR -->
-          {% if lista_reportes is not none %} <!-- Si hubo conexión a BD (lista existe; puede estar vacía) -->
-            <select id="reporte" name="reporte" class="select" required> <!-- Selector con opciones traídas de la BD -->
-              {% if lista_reportes|length > 0 %} <!-- Si hay elementos para listar -->
-                <option value="">Seleccione un reporte</option> <!-- Placeholder de selección -->
-                {% for r in lista_reportes %} <!-- Itera cada nombre -->
-                  <option value="{{ r }}">{{ r }}</option> <!-- Opción con el nombre del reporte -->
+    <!-- ================== FORM ================== -->
+    <form method="post" action="/encuesta" class="survey-grid" id="formEncuesta">
+      <!-- Reporte -->
+      <section class="card reporte">
+        <label class="label">Informe a evaluar</label>
+        {% if nombre_reporte %}
+          <input id="reporte" name="reporte" type="text" value="{{ nombre_reporte }}" class="input readonly" readonly required>
+          <p class="hint">Valor recibido desde el enlace/código QR.</p>
+        {% else %}
+          {% if lista_reportes is not none %}
+            <select id="reporte" name="reporte" class="select" required>
+              {% if lista_reportes|length > 0 %}
+                <option value="">Seleccione un reporte</option>
+                {% for r in lista_reportes %}
+                  <option value="{{ r }}">{{ r }}</option>
                 {% endfor %}
-              {% else %} <!-- Si la lista está vacía -->
-                <option value="" disabled selected>No hay reportes disponibles</option> <!-- Informa que no hay datos -->
+              {% else %}
+                <option value="" disabled selected>No hay reportes disponibles</option>
               {% endif %}
             </select>
-            <p class="hint">Selecciona el informe que deseas evaluar.</p> <!-- Ayuda adicional -->
-          {% else %} <!-- Si falló la BD (lista_reportes es None) -->
-            <input id="reporte" name="reporte" type="text" class="input" placeholder="Escriba el nombre del reporte" required> <!-- Fallback manual -->
-            <p class="hint error">No se pudo cargar la lista desde la base de datos.</p> <!-- Mensaje de error -->
+            <p class="hint">Selecciona el informe que deseas evaluar.</p>
+          {% else %}
+            <input id="reporte" name="reporte" type="text" class="input" placeholder="Escriba el nombre del reporte" required>
+            <p class="hint error">No se pudo cargar la lista desde la base de datos.</p>
           {% endif %}
         {% endif %}
       </section>
 
-      <section class="card area"> <!-- Tarjeta: área del evaluador; área de grid "area" -->
-        <label for="area_evaluacion" class="label">¿Desde qué área nos está evaluando?</label> <!-- Etiqueta -->
-        <input id="area_evaluacion" name="area_evaluacion" type="text" class="input" placeholder="Ej.: Gerencia, Operaciones, Finanzas" required> <!-- Input de texto -->
+      <!-- Proceso -->
+      <section class="card proceso">
+        <label for="proceso" class="label">¿Desde qué área (proceso) nos está evaluando?</label>
+        {% if lista_procesos is not none and lista_procesos|length > 0 %}
+          <select id="proceso" name="proceso" class="select" required>
+            <option value="">Seleccione un proceso</option>
+            {% for p in lista_procesos %}
+              <option value="{{ p }}">{{ p }}</option>
+            {% endfor %}
+          </select>
+          <p class="hint">Selecciona tu proceso.</p>
+        {% else %}
+          <input id="proceso" name="proceso" type="text" class="input" placeholder="Escribe el proceso" required>
+          <p class="hint error">No se pudieron cargar los procesos desde la base.</p>
+        {% endif %}
       </section>
 
-      <section class="card cargo"> <!-- Tarjeta: cargo del evaluador; área de grid "cargo" -->
-        <label for="cargo_evaluador" class="label">¿Cuál es su cargo dentro de esta área?</label> <!-- Etiqueta -->
-        <input id="cargo_evaluador" name="cargo_evaluador" type="text" class="input" placeholder="Ej.: Analista, Jefe, Coordinador" required> <!-- Input de texto -->
+      <!-- Subproceso (dependiente) -->
+      <section class="card subproceso">
+        <label for="subproceso_evaluacion" class="label">¿Desde qué subproceso nos está evaluando?</label>
+        <select id="subproceso_evaluacion" name="subproceso_evaluacion" class="select" required disabled>
+          <option value="">Seleccione un subproceso</option>
+        </select>
+        <p class="hint">Este listado depende del proceso seleccionado.</p>
       </section>
 
-      <!-- BLOQUES COLUMNA DERECHA -->
-      <section class="card calificaciones"> <!-- Tarjeta: calificaciones (matriz 1–5); área de grid "calificaciones" -->
-        <div class="block-head"> <!-- Encabezado del bloque (título + hint) -->
-          <h2 class="block-title">Calificaciones</h2> <!-- Título del bloque -->
-          <p class="hint">1 = Muy baja / Nada — 5 = Excelente / Muchísimo</p> <!-- Hint de escala -->
+      <!-- Cargo -->
+      <section class="card cargo">
+        <label for="cargo_evaluador" class="label">¿Cuál es su cargo dentro de esta área?</label>
+        <input id="cargo_evaluador" name="cargo_evaluador" type="text" class="input" placeholder="Ej.: Analista, Jefe, Coordinador" required>
+      </section>
+
+      <!-- Calificaciones -->
+      <section class="card calificaciones">
+        <div class="block-head">
+          <h2 class="block-title">Calificaciones</h2>
+          <p class="hint">1 = Muy baja / Nada — 5 = Excelente / Muchísimo</p>
         </div>
 
-        <div class="matrix"> <!-- Contenedor de la matriz 1–5 -->
-          <div class="matrix-head"> <!-- Cabecera con números 1–5 -->
-            <div class="cell"></div> <!-- Celda vacía (esquina superior izquierda) -->
-            {% for n in [1,2,3,4,5] %} <!-- Loop de columnas 1..5 -->
-              <div class="cell center">{{n}}</div> <!-- Número centrado -->
+        <div class="matrix">
+          <div class="matrix-head">
+            <div class="cell"></div>
+            {% for n in [1,2,3,4,5] %}
+              <div class="cell center">{{ n }}</div>
             {% endfor %}
           </div>
 
-          <div class="matrix-row"> <!-- Fila: Claridad y precisión -->
-            <div class="cell row-label">Claridad y precisión</div> <!-- Etiqueta fila -->
-            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
-              <div class="cell center"> <!-- Celda centrada -->
-                <input type="radio" id="cp_{{n}}" name="claridad_precision" value="{{n}}" required> <!-- Radio oculto visualmente (se estiliza con .dot) -->
-                <label for="cp_{{n}}" class="dot"></label> <!-- Punto clicable que marca el radio -->
-              </div>
-            {% endfor %}
-          </div>
-
-          <div class="matrix-row"> <!-- Fila: Utilidad general -->
-            <div class="cell row-label">Utilidad general</div> <!-- Etiqueta fila -->
-            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
+          <div class="matrix-row">
+            <div class="cell row-label">Claridad y precisión</div>
+            {% for n in [1,2,3,4,5] %}
               <div class="cell center">
-                <input type="radio" id="ug_{{n}}" name="utilidad_general" value="{{n}}" required> <!-- Radio -->
-                <label for="ug_{{n}}" class="dot"></label> <!-- Punto visual -->
+                <input type="radio" id="cp_{{n}}" name="claridad_precision" value="{{n}}" required>
+                <label for="cp_{{n}}" class="dot"></label>
               </div>
             {% endfor %}
           </div>
 
-          <div class="matrix-row"> <!-- Fila: Apoyo a decisiones -->
-            <div class="cell row-label">Apoyo a decisiones</div> <!-- Etiqueta fila -->
-            {% for n in [1,2,3,4,5] %} <!-- Radios 1..5 -->
+          <div class="matrix-row">
+            <div class="cell row-label">Utilidad general</div>
+            {% for n in [1,2,3,4,5] %}
               <div class="cell center">
-                <input type="radio" id="ud_{{n}}" name="utilidad_decisiones" value="{{n}}" required> <!-- Radio -->
-                <label for="ud_{{n}}" class="dot"></label> <!-- Punto visual -->
+                <input type="radio" id="ug_{{n}}" name="utilidad_general" value="{{n}}" required>
+                <label for="ug_{{n}}" class="dot"></label>
               </div>
             {% endfor %}
           </div>
-        </div> <!-- Fin de la matriz -->
-      </section>
 
-      <section class="card frecuencia"> <!-- Tarjeta: frecuencia de uso; área de grid "frecuencia" -->
-        <label class="label">¿Con qué frecuencia consulta el informe?</label> <!-- Etiqueta -->
-        <div class="segmented"> <!-- Control segmentado tipo "píldoras" -->
-          <input type="radio" id="fq_diario"   name="frecuencia_uso" value="diario"  required> <!-- Radio oculto -->
-          <label for="fq_diario">Diario</label> <!-- Píldora visible -->
-
-          <input type="radio" id="fq_semanal"  name="frecuencia_uso" value="semanal"> <!-- Radio oculto -->
-          <label for="fq_semanal">Semanal</label> <!-- Píldora visible -->
-
-          <input type="radio" id="fq_mensual"  name="frecuencia_uso" value="mensual"> <!-- Radio oculto -->
-          <label for="fq_mensual">Mensual</label> <!-- Píldora visible -->
-
-          <input type="radio" id="fq_eventual" name="frecuencia_uso" value="eventual"> <!-- Radio oculto -->
-          <label for="fq_eventual">Eventual</label> <!-- Píldora visible -->
+          <div class="matrix-row">
+            <div class="cell row-label">Apoyo a decisiones</div>
+            {% for n in [1,2,3,4,5] %}
+              <div class="cell center">
+                <input type="radio" id="ud_{{n}}" name="utilidad_decisiones" value="{{n}}" required>
+                <label for="ud_{{n}}" class="dot"></label>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </section>
 
-      <section class="card comentarios"> <!-- Tarjeta: comentarios; área de grid "comentarios" -->
-        <label for="sugerencias_mejora" class="label">¿Qué mejorarías de este informe?</label> <!-- Etiqueta -->
-        <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" class="textarea" placeholder="Escribe tus comentarios..."></textarea> <!-- Área de texto -->
+      <!-- Frecuencia -->
+      <section class="card frecuencia">
+        <label class="label">¿Con qué frecuencia consulta el informe?</label>
+        <div class="segmented">
+          <input type="radio" id="fq_diario"   name="frecuencia_uso" value="diario"  required>
+          <label for="fq_diario">Diario</label>
+
+          <input type="radio" id="fq_semanal"  name="frecuencia_uso" value="semanal">
+          <label for="fq_semanal">Semanal</label>
+
+          <input type="radio" id="fq_mensual"  name="frecuencia_uso" value="mensual">
+          <label for="fq_mensual">Mensual</label>
+
+          <input type="radio" id="fq_eventual" name="frecuencia_uso" value="eventual">
+          <label for="fq_eventual">Eventual</label>
+        </div>
       </section>
 
-      <footer class="sticky"> <!-- Barra pegada al fondo del viewport con el botón de envío -->
-        <button type="submit" class="btn-primary">Enviar respuesta</button> <!-- Botón de envío del formulario -->
+      <!-- Comentarios -->
+      <section class="card comentarios">
+        <label for="sugerencias_mejora" class="label">¿Qué mejorarías de este informe?</label>
+        <textarea id="sugerencias_mejora" name="sugerencias_mejora" rows="4" class="textarea" placeholder="Escribe tus comentarios..." required></textarea>
+      </section>
+
+      <!-- Footer -->
+      <footer class="sticky">
+        <button type="submit" class="btn-primary">Enviar respuesta</button>
       </footer>
-    </form> <!-- Fin del formulario -->
-  </main> <!-- Fin del contenedor principal -->
+    </form>
 
+    <!-- ============ MODAL de AGRADECIMIENTO ============ -->
+    <div id="thanksBackdrop" class="modal-backdrop" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thanksTitle">
+        <button type="button" class="modal-close" id="thanksClose" aria-label="Cerrar">×</button>
+
+        <!-- Avatar: dentro puedes poner la imagen que quieras -->
+        <div class="modal-avatar">
+          <!-- Sugerencia: coloca aquí tu imagen corporativa si quieres -->
+          <!-- <img src="/static/img/tu_imagen.png" alt="Gracias"> -->
+        </div>
+
+        <h3 class="modal-title" id="thanksTitle">¡Gracias por tu aporte!</h3>
+        <p class="modal-text">
+          Tu retroalimentación nos ayuda a <b>mejorar los informes BI</b> y a tomar
+          <b>mejores decisiones</b> en Consorcio Express. 🙌
+        </p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="thanksContinue">Seguir explorando</button>
+          <a class="btn-primary" href="/" id="thanksHome">Ir al inicio</a>
+        </div>
+
+        <!-- Confetti generado por JS -->
+        <div class="confetti" aria-hidden="true"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================== THEME + COMPACT ================== -->
   <script>
-    // =======================
-    // THEME: inicialización, toggle, seguimiento del SO
-    // =======================
-    (function initTheme() { // IIFE para no contaminar el scope global
-      const root  = document.documentElement; // <html>, donde pondremos data-theme
-      const btn   = document.getElementById('themeToggle'); // botón de alternancia
-      const media = window.matchMedia('(prefers-color-scheme: dark)'); // consulta de tema del SO
-      const saved = localStorage.getItem('theme'); // preferencia guardada: 'light' | 'dark' | null
-      let followOS = false; // bandera para saber si seguimos los cambios del SO
+    (function initTheme() {
+      const root  = document.documentElement;
+      const btn   = document.getElementById('themeToggle');
+      const media = window.matchMedia('(prefers-color-scheme: dark)');
+      const saved = localStorage.getItem('theme');
+      let followOS = false;
 
-      function setTheme(mode) { // Cambia el atributo y el texto del botón
-        root.setAttribute('data-theme', mode); // aplica tokens CSS del tema
-        btn.textContent = (mode === 'dark') ? '🌞 Claro...' : '🌚 Oscuro'; // actualiza label del botón
+      function setTheme(mode) {
+        root.setAttribute('data-theme', mode);
+        btn.textContent = (mode === 'dark') ? '🌞 Claro...' : '🌚 Oscuro';
       }
 
-      // 1) Si hay preferencia del usuario, úsala; si no, sigue el SO
       if (saved === 'light' || saved === 'dark') {
-        setTheme(saved); // aplica preferencia persistida
+        setTheme(saved);
       } else {
-        setTheme(media.matches ? 'dark' : 'light'); // usa tema del SO al cargar
-        followOS = true; // mientras no haya preferencia guardada, seguimos al SO
+        setTheme(media.matches ? 'dark' : 'light');
+        followOS = true;
       }
 
-      // 2) Reacciona a cambios del SO (solo si estamos siguiendo al SO)
       media.addEventListener('change', (e) => {
-        if (followOS) setTheme(e.matches ? 'dark' : 'light'); // alterna según el SO
+        if (followOS) setTheme(e.matches ? 'dark' : 'light');
       });
 
-      // 3) Toggle manual: fija preferencia y deja de seguir al SO
       btn.addEventListener('click', () => {
-        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; // invierte el modo
-        followOS = false; // ya no seguimos al SO porque el usuario decidió
-        localStorage.setItem('theme', next); // persistimos la preferencia
-        setTheme(next); // aplicamos el nuevo tema
+        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        followOS = false;
+        localStorage.setItem('theme', next);
+        setTheme(next);
       });
     })();
 
-    // =======================
-    // COMPACT MODE: automático para pantallas bajitas (<= 800 px)
-    // =======================
-    (function initCompact() { // IIFE para modo compacto
-      const apply = () => { // función que aplica o quita la clase
-        const isSmall = window.innerHeight <= 800; // umbral de altura (ajustable)
-        if (!document.body.classList.contains('compact')) { // si NO se forzó manual
-          document.body.classList.toggle('compact-auto', isSmall); // alterna clase auto
+    (function initCompact() {
+      const apply = () => {
+        const isSmall = window.innerHeight <= 800;
+        if (!document.body.classList.contains('compact')) {
+          document.body.classList.toggle('compact-auto', isSmall);
         }
       };
-      apply(); // evalúa al cargar
-      window.addEventListener('resize', apply); // re-evalúa al cambiar tamaño
+      apply();
+      window.addEventListener('resize', apply);
     })();
-  </script> <!-- Fin del script de comportamiento -->
-</body> <!-- Fin del body -->
-</html> <!-- Fin del documento -->
-<!--
-  Fin del documento HTML de la encuesta.
-  - Incluye comentarios para entender cada sección y funcionalidad.
-  - El código JavaScript maneja el tema y el modo compacto de forma eficiente.
-  - La estructura es semántica y accesible, con etiquetas ARIA donde corresponde.
+  </script>
+
+  <!-- ============ PROCESO → SUBPROCESO (dependiente) ============ -->
+  <script>
+    (function initProcesoSubproceso() {
+      const selProceso = document.getElementById('proceso');
+      const selSubproc = document.getElementById('subproceso_evaluacion');
+      if (!selProceso || !selSubproc) return;
+
+      function resetSubprocesos() {
+        selSubproc.innerHTML = '<option value="">Seleccione un subproceso</option>';
+        selSubproc.disabled = true;
+      }
+
+      selProceso.addEventListener('change', async () => {
+        const proceso = selProceso.value;
+        resetSubprocesos();
+        if (!proceso) return;
+
+        try {
+          const r = await fetch(`/api/subprocesos?proceso=${encodeURIComponent(proceso)}`);
+          const data = await r.json();
+          if (data && data.ok && Array.isArray(data.items)) {
+            data.items.forEach(sp => {
+              const opt = document.createElement('option');
+              opt.value = sp;
+              opt.textContent = sp;
+              selSubproc.appendChild(opt);
+            });
+            selSubproc.disabled = data.items.length === 0;
+          }
+        } catch (err) {
+          console.error('Error cargando subprocesos:', err);
+        }
+      });
+
+      resetSubprocesos();
+    })();
+  </script>
+
+  <!-- ============ Envío AJAX + Modal + Confetti aleatorio ============ -->
+  <script>
+    (function initAjaxSubmit(){
+      const form         = document.getElementById('formEncuesta');
+      const backdrop     = document.getElementById('thanksBackdrop');
+      const btnCloseX    = document.getElementById('thanksClose');
+      const btnContinue  = document.getElementById('thanksContinue');
+      const selProceso   = document.getElementById('proceso');
+      const selSubproc   = document.getElementById('subproceso_evaluacion');
+      const confettiBox  = backdrop.querySelector('.confetti');
+
+      // --------- Genera confetti aleatorio ----------
+      function buildConfetti(n = 120){
+        if (!confettiBox) return;
+        confettiBox.innerHTML = '';
+
+        const colors = ['#5076E2','#83A4FF','#3F5DB2','#2BC14B','#16A038','#F2C94C','#BBCCF9'];
+
+        for (let i=0; i<n; i++){
+          const s = document.createElement('span');
+
+          // Posición inicial random (0–100%)
+          s.style.left = (Math.random()*100).toFixed(2) + '%';
+
+          // Tamaño 6–12 px
+          s.style.setProperty('--size', (6 + Math.random()*6).toFixed(1) + 'px');
+
+          // Deriva horizontal en mitad y final (-30..30 / -60..60 px)
+          s.style.setProperty('--tx50',  ((Math.random()*60)  - 30).toFixed(0) + 'px');
+          s.style.setProperty('--tx100', ((Math.random()*120) - 60).toFixed(0) + 'px');
+
+          // Duración 2.4–4.0 s
+          s.style.setProperty('--dur',   (2.4 + Math.random()*1.6).toFixed(2) + 's');
+
+          // Retardo 0–0.8 s
+          s.style.setProperty('--delay', (Math.random()*0.8).toFixed(2) + 's');
+
+          // Color
+          s.style.setProperty('--conf-color', colors[(Math.random()*colors.length)|0]);
+
+          confettiBox.appendChild(s);
+        }
+      }
+
+      // --------- Modal open/close ----------
+      function openModal(){
+        // Confetti nuevo en cada apertura
+        buildConfetti(120);
+
+        // Abre modal y dispara animación
+        backdrop.classList.add('is-open');
+        backdrop.classList.remove('celebrate'); // reset anim
+        void backdrop.offsetWidth;              // reflow
+        backdrop.classList.add('celebrate');    // start anim
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal(){
+        backdrop.classList.remove('celebrate');
+        backdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+
+      // Limpia el formulario y deja subproceso deshabilitado
+      function resetForm(){
+        form.reset();
+
+        if (selProceso && !selProceso.hasAttribute('readonly')) {
+          selProceso.value = "";
+        }
+        if (selSubproc) {
+          selSubproc.innerHTML = '<option value="">Seleccione un subproceso</option>';
+          selSubproc.disabled = true;
+        }
+
+        const firstEditable = form.querySelector('input:not([readonly]), select:not([disabled]), textarea');
+        if (firstEditable) firstEditable.focus();
+      }
+
+      // Cerrar modal
+      btnCloseX.addEventListener('click', closeModal);
+      btnContinue.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', (e)=>{ if (e.target === backdrop) closeModal(); });
+
+      // Interceptar submit
+      form.addEventListener('submit', async (ev)=>{
+        ev.preventDefault();
+
+        const fd = new FormData(form);
+
+        try{
+          const resp = await fetch(form.action, { method: 'POST', body: fd });
+          if (!resp.ok) {
+            const msg = await resp.text();
+            alert('No se pudo guardar la encuesta.\n\n' + msg);
+            return;
+          }
+
+          const data = await resp.json();
+          if (data && data.ok) {
+            openModal();
+            resetForm();
+          } else {
+            alert('No se pudo guardar la encuesta. Intenta nuevamente.');
+          }
+        }catch(err){
+          console.error('Error enviando encuesta:', err);
+          alert('Ocurrió un error al enviar. Verifica tu conexión e intenta de nuevo.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
